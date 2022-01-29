@@ -2,30 +2,32 @@
 #ifndef _TRIANGLE_H_
 #define _TRIANGLE_H_
 
-#include "Point.h"
+#include <vector>
 
 class Triangle
 {
-    Point *p;
-    Point *q;
-    Point *r;
-    Point *s;
-    // Point *colors;
+    std::vector<float> p;
+    std::vector<float> q;
+    std::vector<float> r;
+    std::vector<float> s;
+    std::vector<float> gMin;
+    std::vector<float> gMax;
+    // std::vector<float> colors;
     float alpha;
     float beta;
     float gamma;
 
 public:
-    Triangle(Point *, Point *, Point *);
+    Triangle(const std::vector<float> &, const std::vector<float> &, const std::vector<float> &);
     ~Triangle();
-    void calcBarys(Point *);
+    void calcBarys(const std::vector<float> &);
     bool inTriangle();
 
 private:
-    float calcArea(Point *, Point *, Point *);
+    float calcArea(const std::vector<float> &, const std::vector<float> &, const std::vector<float> &);
 };
 
-Triangle::Triangle(Point *p, Point *q, Point *r)
+Triangle::Triangle(const std::vector<float> &p, const std::vector<float> &q, const std::vector<float> &r)
 {
     this->p = p;
     this->q = q;
@@ -34,28 +36,9 @@ Triangle::Triangle(Point *p, Point *q, Point *r)
 
 Triangle::~Triangle()
 {
-    if (p)
-    {
-        delete p;
-    }
-
-    if (q)
-    {
-        delete q;
-    }
-
-    if (r)
-    {
-        delete r;
-    }
-
-    if (s)
-    {
-        delete s;
-    }
 }
 
-void Triangle::calcBarys(Point *s)
+void Triangle::calcBarys(const std::vector<float> &s)
 {
     this->s = s;
 
@@ -64,15 +47,15 @@ void Triangle::calcBarys(Point *s)
     beta = calcArea(p, s, r) / area;
     gamma = calcArea(p, q, s) / area;
 
-    this->s->z = alpha * p->z + beta * q->z + gamma * r->z;
+    this->s.at(2) = alpha * p.at(2) + beta * q.at(2) + gamma * r.at(2);
 }
 
 // void Triangle::setZ() {}
 
 // signed area
-float Triangle::calcArea(Point *a, Point *b, Point *c)
+float Triangle::calcArea(const std::vector<float> &a, const std::vector<float> &b, const std::vector<float> &c)
 {
-    return (a->x * (b->y - c->y) + b->x * (c->y - a->y) + c->x * (a->y - b->y)) / 2.0;
+    return (a.at(0) * (b.at(1) - c.at(1)) + b.at(0) * (c.at(1) - a.at(1)) + c.at(0) * (a.at(1) - b.at(1))) / 2.0;
 }
 
 bool Triangle::inTriangle()

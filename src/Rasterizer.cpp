@@ -2,6 +2,8 @@
 #include <limits>
 #include <cmath>
 
+#include "Triangle"
+
 using namespace std;
 Rasterizer::Rasterizer(vector<float> &posBuf, vector<float> &norBuf) : posBuf{posBuf}, norBuf{norBuf}
 {
@@ -50,22 +52,16 @@ void Rasterizer::rotateY()
 
 void Rasterizer::calcExtrema()
 {
-    gMinX = cPosBuf.at(0);
-    gMaxX = cPosBuf.at(0);
-    gMinY = cPosBuf.at(1);
-    gMaxY = cPosBuf.at(1);
-    gMinZ = cPosBuf.at(2);
-    gMaxZ = cPosBuf.at(2);
-
-    for (size_t i = 3; i < cPosBuf.size(); i += 3)
+    size_t i = 0;
+    do
     {
         gMinX = min(gMinX, cPosBuf.at(i));
-        gMaxX = max(gMaxX, cPosBuf.at(i));
-        gMinY = min(gMinY, cPosBuf.at(i + 1));
-        gMaxY = max(gMaxY, cPosBuf.at(i + 1));
-        gMinZ = min(gMinZ, cPosBuf.at(i + 2));
-        gMaxZ = max(gMaxZ, cPosBuf.at(i + 2));
-    }
+        gMaxX = max(gMaxX, cPosBuf.at(i++));
+        gMinY = min(gMinY, cPosBuf.at(i));
+        gMaxY = max(gMaxY, cPosBuf.at(i++));
+        gMinZ = min(gMinZ, cPosBuf.at(i));
+        gMaxZ = max(gMaxZ, cPosBuf.at(i++));
+    } while (i < cPosBuf.size());
 }
 
 void Rasterizer::calcScale()
@@ -154,11 +150,11 @@ void Rasterizer::drawTriangles(Image *image)
         {
             for (float k = minY; k < maxY; k++)
             {
-                float alpha = 0, beta = 0, gamma = 0, area = 0;
-                calcBarycentrics(j, k, x1, y1, x2, y2, x3, y3, alpha, beta, gamma, area);
-                if (shouldDraw(alpha, beta, gamma, area) || (task == 1))
+                float alpha = 0, beta = 0, gamma = 0;
+                calcBarycentrics(j, k, x1, y1, x2, y2, x3, y3, alpha, beta, gamma);
+                if (shouldDraw(alpha, beta, gamma) || (task == 1))
                 {
-                    float contested_z = (alpha * z1 + beta * z2 + gamma * z3) / area;
+                    float contested_z = (alpha * z1 + beta * z2 + gamma * z3);
                     if (zBuf.at(j).at(k) < contested_z || task < 5)
                     {
                         zBuf.at(j).at(k) = contested_z;
@@ -177,9 +173,9 @@ void Rasterizer::drawTriangles(Image *image)
                         }
                         case 7:
                         {
-                            float a = (alpha * cNorBuf.at(i) + beta * cNorBuf.at(i + 3) + gamma * cNorBuf.at(i + 6)) / area;
-                            float b = (alpha * cNorBuf.at(i + 1) + beta * cNorBuf.at(i + 4) + gamma * cNorBuf.at(i + 7)) / area;
-                            float c = (alpha * cNorBuf.at(i + 2) + beta * cNorBuf.at(i + 5) + gamma * cNorBuf.at(i + 8)) / area;
+                            float a = (alpha * cNorBuf.at(i) + beta * cNorBuf.at(i + 3) + gamma * cNorBuf.at(i + 6));
+                            float b = (alpha * cNorBuf.at(i + 1) + beta * cNorBuf.at(i + 4) + gamma * cNorBuf.at(i + 7));
+                            float c = (alpha * cNorBuf.at(i + 2) + beta * cNorBuf.at(i + 5) + gamma * cNorBuf.at(i + 8));
                             float d = max((a + b + c) * sqrt(3) / 3 * 255, 0.0);
                             rT = d;
                             gT = d;
@@ -188,9 +184,9 @@ void Rasterizer::drawTriangles(Image *image)
                         }
                         case 6:
                         {
-                            float a = (alpha * cNorBuf.at(i) + beta * cNorBuf.at(i + 3) + gamma * cNorBuf.at(i + 6)) / area;
-                            float b = (alpha * cNorBuf.at(i + 1) + beta * cNorBuf.at(i + 4) + gamma * cNorBuf.at(i + 7)) / area;
-                            float c = (alpha * cNorBuf.at(i + 2) + beta * cNorBuf.at(i + 5) + gamma * cNorBuf.at(i + 8)) / area;
+                            float a = (alpha * cNorBuf.at(i) + beta * cNorBuf.at(i + 3) + gamma * cNorBuf.at(i + 6));
+                            float b = (alpha * cNorBuf.at(i + 1) + beta * cNorBuf.at(i + 4) + gamma * cNorBuf.at(i + 7));
+                            float c = (alpha * cNorBuf.at(i + 2) + beta * cNorBuf.at(i + 5) + gamma * cNorBuf.at(i + 8));
                             rT = (a + 1) / 2 * 255;
                             gT = (b + 1) / 2 * 255;
                             bT = (c + 1) / 2 * 255;
@@ -212,9 +208,9 @@ void Rasterizer::drawTriangles(Image *image)
                         }
                         case 3:
                         {
-                            rT = (alpha * r + beta * r2 + gamma * r3) / area * 255;
-                            gT = (alpha * g + beta * g2 + gamma * b3) / area * 255;
-                            bT = (alpha * b + beta * b2 + gamma * g3) / area * 255;
+                            rT = (alpha * r + beta * r2 + gamma * r3) * 255;
+                            gT = (alpha * g + beta * g2 + gamma * b3) * 255;
+                            bT = (alpha * b + beta * b2 + gamma * g3) * 255;
                             break;
                         }
                         default:
@@ -231,18 +227,18 @@ void Rasterizer::drawTriangles(Image *image)
 // TODO: change?
 float Rasterizer::calcArea(int x1, int y1, int x2, int y2, int x3, int y3)
 {
-    return abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0);
+    return (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0;
 }
 
-void Rasterizer::calcBarycentrics(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3, float &alpha, float &beta, float &gamma, float &area)
+void Rasterizer::calcBarycentrics(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3, float &alpha, float &beta, float &gamma)
 {
-    area = calcArea(x1, y1, x2, y2, x3, y3); // have to keep this separate because approximation errors?
-    alpha = calcArea(x, y, x2, y2, x3, y3);
-    beta = calcArea(x1, y1, x, y, x3, y3);
-    gamma = calcArea(x1, y1, x2, y2, x, y);
+    float area = calcArea(x1, y1, x2, y2, x3, y3);
+    alpha = calcArea(x, y, x2, y2, x3, y3) / area;
+    beta = calcArea(x1, y1, x, y, x3, y3) / area;
+    gamma = calcArea(x1, y1, x2, y2, x, y) / area;
 }
 
-bool Rasterizer::shouldDraw(float alpha, float beta, float gamma, float area)
+bool Rasterizer::shouldDraw(float alpha, float beta, float gamma)
 {
-    return (alpha + beta + gamma == area);
+    return (alpha >= 0 && beta >= 0 && gamma >= 0);
 }

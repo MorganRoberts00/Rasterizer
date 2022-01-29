@@ -36,8 +36,8 @@ private:
 
     // task 2
     float calcArea(int, int, int, int, int, int);
-    void calcBarycentrics(int, int, int, int, int, int, int, int, float &, float &, float &, float &);
-    bool shouldDraw(float, float, float, float);
+    void calcBarycentrics(int, int, int, int, int, int, int, int, float &, float &, float &);
+    bool shouldDraw(float, float, float);
 };
 
 #endif
